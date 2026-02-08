@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>가족 윷놀이</title>
+    <style>
+        * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+        body { 
+            font-family: "Malgun Gothic", sans-serif; 
+            text-align: center; 
+            background-color: #fdf6e3; 
+            padding-top: 5vh; 
+            color: #3e2723;
+            overflow: hidden;
+        }
+
+        .yut-container { 
+            display: flex; 
+            justify-content: center; 
+            gap: 20px; 
+            margin: 40px 0; 
+            perspective: 1200px; 
+        }
+
+        .yut-stick {
+            width: 100px; 
+            height: 300px;
+            background: #f4e4bc;
+            border: 6px solid #5d4037;
+            border-radius: 50px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .face-text { 
+            font-size: 35px; 
+            font-weight: 900; 
+            color: #5d4037; 
+            text-align: center;
+            writing-mode: vertical-rl;
+            text-orientation: upright;
+            letter-spacing: 15px; 
+            line-height: 1;
+            margin-top: 15px; 
+        }
+
+        .red-text { 
+            color: #d32f2f !important; 
+            font-size: 80px !important; 
+            writing-mode: horizontal-tb;
+            letter-spacing: normal;
+            margin-top: 0;
+        }
+
+        .is-back-yut-border { 
+            border-color: #d32f2f; 
+            background-color: #fff8f8; 
+            border-width: 8px;
+        }
+
+        @keyframes jump {
+            0% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-50px) rotate(10deg); }
+            100% { transform: translateY(0) rotate(-10deg); }
+        }
+        .rolling { animation: jump 0.15s infinite ease-in-out; }
+
+        #status { 
+            font-size: 2.5rem; 
+            font-weight: bold; 
+            color: #8b4513; 
+            height: 1.5em; 
+            margin-bottom: 20px;
+        }
+
+        .once-more {
+            color: #d32f2f !important;
+            animation: blink 0.4s infinite alternate;
+        }
+        @keyframes blink { from { opacity: 1; } to { opacity: 0.5; } }
+        
+        button {
+            padding: 25px 80px; 
+            font-size: 2.5rem; 
+            font-weight: bold;
+            background-color: #5d4037; 
+            color: white; 
+            border: none;
+            border-radius: 80px; 
+            cursor: pointer;
+            box-shadow: 0 10px #3e2723; 
+            -webkit-appearance: none;
+        }
+        button:disabled { background-color: #ccc; box-shadow: none; opacity: 0.7; }
+        button:active:not(:disabled) { transform: translateY(6px); box-shadow: 0 4px #3e2723; }
+    </style>
+</head>
+<body>
+
+    <div id="status">윷을 던져주세요!</div>
+    
+    <div class="yut-container" id="yutDisplay">
+        <div class="yut-stick"><div class="face-text">XXXX</div></div>
+        <div class="yut-stick"><div class="face-text">XXXX</div></div>
+        <div class="yut-stick"><div class="face-text">XXXX</div></div>
+        <div class="yut-stick"><div class="face-text">XXXX</div></div>
+    </div>
+
+    <button id="throwBtn" onclick="startThrow()">던지기!</button>
+
+    <script>
+        const statusDiv = document.getElementById('status');
+        const throwBtn = document.getElementById('throwBtn');
+        const sticks = document.querySelectorAll('.yut-stick');
+        let backYutIndex = 0;
+
+        function startThrow() {
+            throwBtn.disabled = true;
+            // 요청하신 대로 문구 수정
+            statusDiv.innerText = "윷 던지는 중...";
+            statusDiv.classList.remove('once-more');
+            
+            backYutIndex = Math.floor(Math.random() * 4);
+            let duration = 1400; 
+            let blinkInterval = setInterval(blinkEffect, 80); 
+
+            sticks.forEach(s => {
+                s.classList.add('rolling');
+                s.classList.remove('is-back-yut-border');
+            });
+
+            setTimeout(() => {
+                clearInterval(blinkInterval);
+                finishThrow();
+            }, duration);
+        }
+
+        function blinkEffect() {
+            sticks.forEach((stick) => {
+                const textDiv = stick.querySelector('.face-text');
+                const isBellySide = Math.random() > 0.5;
+                if (isBellySide) {
+                    textDiv.innerText = ""; 
+                } else {
+                    textDiv.innerText = "XXXX"; 
+                }
+            });
+        }
+
+        function finishThrow() {
+            let res = [];
+            for (let i = 0; i < 4; i++) {
+                res.push(Math.random() < 0.5 ? 0 : 1);
+            }
+
+            const bellyCount = res.filter(s => s === 0).length;
+            const isActuallyBackDo = (bellyCount === 1 && res[backYutIndex] === 0);
+            
+            sticks.forEach((stick, idx) => {
+                stick.classList.remove('rolling');
+                const textDiv = stick.querySelector('.face-text');
+                
+                if (res[idx] === 0) { // 배
+                    if (isActuallyBackDo && idx === backYutIndex) {
+                        textDiv.innerText = "退";
+                        textDiv.className = "face-text red-text";
+                        stick.classList.add('is-back-yut-border');
+                    } else {
+                        textDiv.innerText = ""; 
+                        textDiv.className = "face-text";
+                    }
+                } else { // 등
+                    textDiv.innerText = "XXXX";
+                    textDiv.className = "face-text";
+                }
+            });
+
+            if (bellyCount === 4 || bellyCount === 0) {
+                statusDiv.innerText = "★ 한 번 더! ★";
+                statusDiv.classList.add('once-more');
+            } else {
+                statusDiv.innerText = "결과를 확인하세요!";
+            }
+            
+            throwBtn.disabled = false;
+        }
+    </script>
+</body>
+</html>
