@@ -34,6 +34,7 @@
             align-items: center;
             justify-content: center;
             box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            transition: border-color 0.2s;
         }
 
         .face-text { 
@@ -48,10 +49,11 @@
             margin-top: 15px; 
         }
 
+        /* 뒷도(退) 발생 시 적용되는 스타일 */
         .red-text { 
             color: #d32f2f !important; 
             font-size: 80px !important; 
-            writing-mode: horizontal-tb;
+            writing-mode: horizontal-tb; /* 가로 방향 */
             letter-spacing: normal;
             margin-top: 0;
         }
@@ -120,18 +122,24 @@
 
         function startThrow() {
             throwBtn.disabled = true;
-            // 요청하신 대로 문구 수정
             statusDiv.innerText = "윷 던지는 중...";
             statusDiv.classList.remove('once-more');
             
+            // 매 던지기마다 뒷도가 될 윷의 위치를 새로 정함
             backYutIndex = Math.floor(Math.random() * 4);
-            let duration = 1400; 
-            let blinkInterval = setInterval(blinkEffect, 80); 
-
+            
+            // 던지기 시작 시 스타일 초기화
             sticks.forEach(s => {
                 s.classList.add('rolling');
                 s.classList.remove('is-back-yut-border');
+                
+                const textDiv = s.querySelector('.face-text');
+                textDiv.className = "face-text"; // 빨간색/가로 정렬 클래스 제거
+                textDiv.innerText = "XXXX";      // 기본 등 모양으로 초기화
             });
+
+            let duration = 1400; 
+            let blinkInterval = setInterval(blinkEffect, 80); 
 
             setTimeout(() => {
                 clearInterval(blinkInterval);
@@ -142,6 +150,7 @@
         function blinkEffect() {
             sticks.forEach((stick) => {
                 const textDiv = stick.querySelector('.face-text');
+                // 흔들리는 동안 '배'와 '등'을 무작위로 보여줌
                 const isBellySide = Math.random() > 0.5;
                 if (isBellySide) {
                     textDiv.innerText = ""; 
@@ -164,21 +173,22 @@
                 stick.classList.remove('rolling');
                 const textDiv = stick.querySelector('.face-text');
                 
-                if (res[idx] === 0) { // 배
+                if (res[idx] === 0) { // 배(평평한 면)가 위로 왔을 때
                     if (isActuallyBackDo && idx === backYutIndex) {
                         textDiv.innerText = "退";
-                        textDiv.className = "face-text red-text";
+                        textDiv.className = "face-text red-text"; // 뒷도 전용 스타일 적용
                         stick.classList.add('is-back-yut-border');
                     } else {
                         textDiv.innerText = ""; 
                         textDiv.className = "face-text";
                     }
-                } else { // 등
+                } else { // 등(둥근 면)이 위로 왔을 때
                     textDiv.innerText = "XXXX";
                     textDiv.className = "face-text";
                 }
             });
 
+            // 결과 멘트 설정
             if (bellyCount === 4 || bellyCount === 0) {
                 statusDiv.innerText = "★ 한 번 더! ★";
                 statusDiv.classList.add('once-more');
@@ -190,5 +200,4 @@
         }
     </script>
 </body>
-
 </html>
